@@ -17,5 +17,5 @@ First Phase:
 Progress:
 - Learning FastAPI
 - Connecting to PostgreSQL
-- Createed User
+- Created User
 - Created Login/Registration forms

@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 # sessionmaker is used to create a session to the database.
 from sqlalchemy.orm import sessionmaker
 
+# "postgresql://user:password@host:port/database"
 SQLALCHEMY_DATABASE_URL = "postgresql://postgres:karim@localhost:5432/Backend"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

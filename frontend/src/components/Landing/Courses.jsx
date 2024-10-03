@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import Carousel from "./Carousel";
+import Carouselv2 from "./Carouselv2";
 
 
         // backgroundColor: "#F7FFF7",
@@ -42,7 +43,7 @@ export default function Courses() {
         </Typography>
       </Box>
 
-      <Carousel />
+      <Carouselv2 />
     </Box>
   );
 }
