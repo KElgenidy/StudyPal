@@ -13,7 +13,7 @@ export default function Dashboard() {
 
   const getEnrolledCourses = async () => {
     try {
-      const response = await api.get(`/enrolled_courses/${user_id}`);
+      const response = await api.get(`/enrollments/${user_id}`);
       setEnrolledCourses(response.data);
     } catch (error) {
       console.log(error);
@@ -51,13 +51,14 @@ export default function Dashboard() {
               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <h2>{course.course_name}</h2>
-            <p>{course.course_description}</p>
-            <p>Instructor: {course.instructor_name}</p>
-            <p>Start Date: {course.start_date}</p>
-            <p>End Date: {course.end_date}</p>
-            <p>Duration: {course.duration} hours</p>
-            <p>Price: ${course.price}</p>
+            <Typography variant="h6" sx={{
+              color: "#071013",
+              fontWeight: "bold",
+              fontSize: "1.5rem",
+              marginBottom: "20px",
+            }}>
+              {course.Name}
+            </Typography>
           </Box>
         ))
       ) : (

@@ -27,6 +27,9 @@ def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    if user.Password == "":
+        raise HTTPException(status_code=400, detail="Password cannot be empty")
+    
     # Create a new user
     new_user = models.Users(
         ID=user.ID,
@@ -114,25 +117,25 @@ def get_enrollments(user_id: int, db: Session = Depends(get_db)):
     return enrolledcourses
 
 # enroll in a course
-# @app.post("/enrollments/create", response_model=schemas.EnrollmentResponse)
-# def enroll_course(enrollment: schemas.EnrollmentBase, db: Session = Depends(get_db)):
-#     # Check if the course exists
-#     course = db.query(models.Courses).filter(models.Courses.CRN == enrollment.CRN).first()
-#     if not course:
-#         raise HTTPException(status_code=404, detail="Course not found")
-#     # Check if the user is already enrolled in the course
-#     existing_enrollment = db.query(models.Enrollment).filter(models.Enrollment.UserId == enrollment.UserId, models.Enrollment.CRN == enrollment.CRN).first()
-#     if existing_enrollment:
-#         raise HTTPException(status_code=400, detail="You are already enrolled in this course")
-#     # Create a new enrollment
-#     new_enrollment = models.Enrollment(
-#         UserId=enrollment.UserId,
-#         CRN=enrollment.CRN
-#     )
-#     db.add(new_enrollment)
-#     db.commit()
-#     db.refresh(new_enrollment)
-#     return new_enrollment
+@app.post("/enrollments/enroll", response_model=schemas.EnrollBase)
+def enroll_course(enrollment: schemas.EnrollBase, db: Session = Depends(get_db)):
+    # Check if the course exists
+    course = db.query(models.Courses).filter(models.Courses.CRN == enrollment.CRN).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    # Check if the user is already enrolled in the course
+    existing_enrollment = db.query(models.Enrollment).filter(models.Enrollment.UserId == enrollment.UserId, models.Enrollment.CRN == enrollment.CRN).first()
+    if existing_enrollment:
+        raise HTTPException(status_code=400, detail="You are already enrolled in this course")
+    # Create a new enrollment
+    new_enrollment = models.Enrollment(
+        UserId=enrollment.UserId,
+        CRN=enrollment.CRN
+    )
+    db.add(new_enrollment)
+    db.commit()
+    db.refresh(new_enrollment)
+    return new_enrollment
 
 
 @app.post("/enrollments/create", response_model=schemas.EnrollmentResponse)

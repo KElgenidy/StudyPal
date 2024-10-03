@@ -10,7 +10,7 @@ class Users(Base):
     ID = Column(Integer, primary_key=True, index=True)
     Name = Column(String(255), nullable=False)
     Email = Column(String(255), unique=True, nullable=False, index=True)
-    Password = Column(String(255), nullable=False)
+    Password = Column(String(255), nullable=True)
     Type = Column(String(50), nullable=False)  # 'student' or 'instructor'
     Major = Column(String(255), nullable=True)
     # RELATIONSHIPS 

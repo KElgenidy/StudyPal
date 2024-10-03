@@ -46,9 +46,18 @@ class EnrollmentBase(BaseModel):
     UserId: int
     CRN: List[int]  # Change to accept a list of CRNs
 
+class EnrollBase(BaseModel):
+    UserId: int
+    CRN: int  # Change to accept a list of CRNs
+
+    class Config:
+        from_attributes = True
+
+
 class EnrollmentResponse(BaseModel):
     UserId: int
     CRN: List[int]
 
     class Config:
         from_attributes = True
+

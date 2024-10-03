@@ -8,7 +8,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
-import { Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -24,11 +24,16 @@ export default function Siderbar() {
     },
     {
       id: 1,
+      text: "Enrollments",
+      path: "/home/enrollments",
+    },
+    {
+      id: 2,
       text: "SWE",
       path: "/home/swe",
     },
     {
-      id: 2,
+      id: 3,
       text: "Business Law",
       path: "/home/business-law",
     },
@@ -85,8 +90,10 @@ export default function Siderbar() {
                 </ListItemText>
               </ListItemButton>
             </ListItem>
-          ))}        </List>
+          ))}        
+        </List>
       </Box>
+      <Divider />
     </Drawer>
   );
 }
