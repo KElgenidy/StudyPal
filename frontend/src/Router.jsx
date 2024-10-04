@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import Enroll from "./pages/Enroll";
+import Chat from "./pages/Chat";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: "/home/enrollments",
         element: <Enroll />,
+      },
+      {
+        path: "/home/chat/:CRN",
+        element: <Chat />,
       }
     ]
   },
