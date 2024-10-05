@@ -3,6 +3,16 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef, Fragment } from "react";
 import { ChatOllama } from "@langchain/ollama";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import api from "../api";
+
+/*
+  Chat Page
+  - Chat with StudyPal
+  - Implement New chat, creating a new chat by date
+  - Implement Restore Last Chat, restoring the message of last chat by date
+
+*/
+
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
@@ -21,6 +31,7 @@ const drawerWidth = 240;
 export default function Chat() {
   const { CRN } = useParams();
   const [messages, setMessages] = useState([]);
+  const [oldMessages, setOldMessages] = useState([]);
   const [input, setInput] = useState('');
    const messagesEndRef = useRef(null);
 
@@ -57,11 +68,34 @@ export default function Chat() {
     // console.log(response)
     // return response.content;
 
-    const chain = prompt.pipe(llm);
-    const response = await chain.invoke({
-      input: message,
-    });
-    return response.content;
+    // const chain = prompt.pipe(llm);
+    // const response = await chain.invoke({
+    //   input: message,
+    // });
+    try {
+      const response = await api.post(`/chat/`, {
+        query: message,
+      });
+
+      return response.data.response;
+    } catch (error) {
+      console.log(error);
+    }
+    
+  };
+
+  const handleNewChat = () => {
+    // TODO: Implement new chat
+    console.log("New chat");
+    setOldMessages(messages);
+    setMessages([]);
+  };
+
+  const handleRestoreLastChat = () => {
+    // TODO: Implement restore last chat
+    console.log("Restore last chat");
+    setMessages(oldMessages);
+    setOldMessages([]);
   };
 
   return (
@@ -105,6 +139,7 @@ export default function Chat() {
               sx={{
                 fontWeight: "bold",
               }}
+              onClick={handleNewChat}
             >
               New Chat
             </Typography>
@@ -115,6 +150,7 @@ export default function Chat() {
               sx={{
                 fontWeight: "bold",
               }}
+              onClick={handleRestoreLastChat}
             >
               Restore Last Chat
             </Typography>

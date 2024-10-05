@@ -3,9 +3,13 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import engine, get_db
 from fastapi.middleware.cors import CORSMiddleware
+from studypal import StudyPal
+
+studypal = StudyPal()
 
 # Create all tables
 models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
 
@@ -165,3 +169,14 @@ def enroll_course(enrollment: schemas.EnrollmentBase, db: Session = Depends(get_
         "CRN": enrollment.CRN
     }
 
+
+
+
+@app.post("/chat", response_model=schemas.QueryResponse)
+def chat(request: schemas.Query):
+    response =  studypal.query(query=request.query)
+    return {
+        "response": response
+    }
+    
+    

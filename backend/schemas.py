@@ -61,3 +61,9 @@ class EnrollmentResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class Query(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
+    response: str
