@@ -1,27 +1,32 @@
-import { Box, Button, Typography } from "@mui/material";
-import { useState, useEffect } from "react";
+import { Typography, Box, List, ListItem, ListItemText, Button } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 const drawerWidth = 240;
-
 export default function Dashboard() {
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const user = localStorage.getItem("Name");
   const user_id = localStorage.getItem("UserId");
-  const user_name = localStorage.getItem("Name");
+  const [enrollments, setEnrollments] = useState(false);
+  const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
 
-  const getEnrolledCourses = async () => {
+  const getEnrollments = async () => {
     try {
-      const response = await api.get(`/enrollments/${user_id}`);
-      setEnrolledCourses(response.data);
+      const response = await api.get(`/enrollment/${user_id}`);
+      if (response.data.length != 0) {
+        setEnrollments(true);
+      }
+      setCourses(response.data);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching enrollments:", error);
+      setEnrollments(false);
+      setCourses([]);
     }
   };
 
   useEffect(() => {
-    getEnrolledCourses();
+    getEnrollments();
   }, []);
 
   return (
@@ -33,70 +38,81 @@ export default function Dashboard() {
         mt: "65px",
         height: "calc(100vh - 65px)",
         padding: "20px",
+        border: "1px solid #ccc",
       }}
     >
-      {enrolledCourses.length > 0 ? (
-        enrolledCourses.map((course) => (
-          <Box
-            key={course.course_id}
-            sx={{
+      
+        {
+          enrollments ? (
+            <Box sx={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              margin: "10px",
-              padding: "10px",
               border: "1px solid #ccc",
               borderRadius: "5px",
               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Typography variant="h6" sx={{
-              color: "#071013",
-              fontWeight: "bold",
-              fontSize: "1.5rem",
-              marginBottom: "20px",
+              overflow: "auto",
             }}>
-              {course.Name}
-            </Typography>
-          </Box>
-        ))
-      ) : (
-        <Box
-          sx={{
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-            padding: "20px",
-            margin: "20px",
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="h5" sx={{
-            color: "#071013",
-            fontWeight: "bold",
-            fontSize: "1.5rem",
-            marginBottom: "20px",
-          }}>
-           Welcome {user_name}, you have not enrolled in any courses yet.
-          </Typography>
-          <Typography variant="h6" sx={{
-            color: "#071013",
-            fontWeight: "bold",
-            fontSize: "1.3rem",
-            marginBottom: "20px",
-          }}>
-            Please check out our courses by clicking the button below.
-          </Typography>
-          <Button variant="contained" color="primary" sx={{
-            marginTop: "10px",
-          }}
-          onClick={() => navigate("/home/courses")}
-          >
-            Explore Courses
-          </Button>
-        </Box>
-      )}
+              <Typography variant="h4" gutterBottom>
+                Dashboard
+              </Typography>
+
+              <List>
+                {courses.map((course) => (
+                  <ListItem key={course.id} sx={{
+                    borderBottom: "1px solid #ccc",
+                    padding: "10px",
+                    marginBottom: "10px",
+                    borderRadius: "5px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    backgroundColor: "#f5f5f5",
+                    width: "400px",
+                    textAlign: "center",
+                  }}>
+                    <ListItemText primary={course.course_name} />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          ) : (
+            <Box sx={{
+              mt: "20px",
+              display: "flex",
+              flexDirection: "column",
+              border: "1px solid #ccc",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+              borderRadius: "5px",
+              padding: "20px",
+            }}>
+              <Typography variant="h4" gutterBottom
+                sx={{
+                  fontSize: "2rem",
+                }}
+              >
+                Welcome {user},
+              </Typography>
+              <Typography variant="body1" gutterBottom
+               sx={{
+                fontSize: "1.2rem",
+              }}
+              >
+                It seems that you have not enrolled in any courses yet.
+                Click the button below to explore our courses and enroll in one.
+              </Typography>
+              <Button variant="contained" color="primary"
+                sx={{
+                  fontSize: "1.2rem",
+                  marginTop: "1rem",
+                }}
+                onClick={() => navigate("/home/courses")}
+              >
+                Explore Courses
+              </Button>
+            </Box>
+          )
+        }
+
+      
     </Box>
   );
 }

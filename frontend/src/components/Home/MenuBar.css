@@ -1,0 +1,32 @@
+.menu-bar {
+    background-color: #80b7f2;
+    padding: 10px;
+    text-align: center;
+    position: fixed; /* Fix it to the top */
+    top: 0;
+    left: 0;
+    width: 100%; /* Make it cover the full width */
+    z-index: 1; /* Ensure it appears above the sidebar */
+  }
+  
+  .menu-bar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .menu-bar ul li {
+    display: inline;
+    margin-left: 20px;
+  }
+  
+  .menu-bar ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+  }
+  
+  .menu-bar ul li a:hover {
+    color: #51f1e4;
+  }
+  

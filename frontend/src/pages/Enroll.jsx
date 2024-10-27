@@ -14,42 +14,11 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 const drawerWidth = 240;
-// const courses = [
-//   {
-//     id: 1,
-//     name: "Introduction to Computer Science",
-//     instructor: "Dr. John Smith",
-//     description: "An introduction to the fundamentals of computer science.",
-//   },
-//   {
-//     id: 2,
-//     name: "Data Structures and Algorithms",
-//     instructor: "Dr. Jane Doe",
-//     description: "An in-depth study of data structures and algorithms.",
-//   },
-//   {
-//     id: 3,
-//     name: "Web Development",
-//     instructor: "Dr. Bob Johnson",
-//     description:
-//       "A course on building web applications using modern technologies.",
-//   },
-//   {
-//     id: 4,
-//     name: "Database Management",
-//     instructor: "Dr. Sarah Lee",
-//     description: "A course on designing and managing databases.",
-//   },
-//   {
-//     id: 5,
-//     name: "Artificial Intelligence",
-//     instructor: "Dr. David Kim",
-//     description: "An introduction to the field of artificial intelligence.",
-//   },
-// ];
+
 export default function Enroll() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const CourseName = selectedCourse;
@@ -57,6 +26,7 @@ export default function Enroll() {
   const userId = localStorage.getItem("UserId");
   const [enrollError, setEnrollError] = useState("");
   const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
 
   const getCourses = async () => {
     try {
@@ -74,7 +44,7 @@ export default function Enroll() {
 
   const getEnrollments = async () => {
     try {
-      const response = await api.get(`/enrollments/${userId}`);;
+      const response = await api.get(`/enrollment/${userId}`);
       console.log(response.data);
 
       setCourseList(response.data);
@@ -84,21 +54,19 @@ export default function Enroll() {
     }
   };
 
-
   useEffect(() => {
     getEnrollments();
   }, []);
 
   const handleEnroll = async (e) => {
-
     e.preventDefault();
-    const course = courses.find((course) => course.Name === selectedCourse);
-      console.log(course);
+    const course = courses.find((course) => course.course_name === selectedCourse);
+    console.log(course);
 
     try {
-      const response = await api.post(`/enrollments/enroll`, {
-        CRN: course.CRN,
-        UserId: userId,
+      const response = await api.post(`/enrollment/enroll/`, {
+        course_id: course.id,
+        user_id: userId,
       });
       console.log(response.data);
     } catch (error) {
@@ -107,7 +75,7 @@ export default function Enroll() {
       setSelectedCourse("");
       getEnrollments();
     }
-    
+
     // if (selectedCourse) {
     //   // Add the selected course to the course list
     //   const course = courses.find((course) => course.name === selectedCourse);
@@ -127,11 +95,37 @@ export default function Enroll() {
         padding: "20px",
       }}
     >
-      <Typography variant="h4" gutterBottom>
-        Enroll in Courses
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mt: "20px",
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            color: "#071013",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+          }}
+        >
+          Enroll in Courses
+        </Typography>
 
-      <Divider sx={{ marginBottom: "20px" }} />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/home/courses")}
+        >
+          Available Courses
+        </Button>
+      </Box>
+
+      <Divider sx={{
+        marginTop: "20px",
+        marginBottom: "20px" }} />
 
       <Box
         sx={{
@@ -146,10 +140,7 @@ export default function Enroll() {
           padding: "20px",
         }}
       >
-        <Box
-          component={"form"}
-          onSubmit={handleEnroll}
-        >
+        <Box component={"form"} onSubmit={handleEnroll}>
           <Typography variant="h6" gutterBottom>
             Select Your Courses:
           </Typography>
@@ -164,8 +155,8 @@ export default function Enroll() {
               onChange={(e) => setSelectedCourse(e.target.value)}
             >
               {courses.map((course) => (
-                <MenuItem key={course.CRN} value={course.Name}>
-                  {course.Name}
+                <MenuItem key={course.id} value={course.course_name}>
+                  {course.course_name}
                 </MenuItem>
               ))}
             </Select>
@@ -194,14 +185,14 @@ export default function Enroll() {
           <List>
             {courseList.map((course) => (
               <ListItem
-                key={course.CRN}
+                key={course.id}
                 secondaryAction={
                   <IconButton edge="end" aria-label="delete">
                     <DeleteIcon />
                   </IconButton>
                 }
               >
-                <ListItemText primary={course.Name} />
+                <ListItemText primary={course.course_name} />
               </ListItem>
             ))}
           </List>

@@ -1,8 +1,8 @@
 import { Box, CssBaseline } from "@mui/material";
 import { Outlet } from "react-router-dom";
 
-import Siderbar from "../components/Home/Siderbar";
-import HomeNavbar from "../components/Home/HomeNavbar";
+import Siderbar from "../components/HomeV2/Siderbar";
+import HomeNavbar from "../components/HomeV2/HomeNavbar";
 
 export default function Home() {
   const username = localStorage.getItem("Name");

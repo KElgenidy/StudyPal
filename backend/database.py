@@ -1,14 +1,11 @@
-# Create Engine is used to create a connection to the database.
 from sqlalchemy import create_engine
-# declarative_base is used to create a base class for the database, which servers for declarative models that will be created.
-from sqlalchemy.ext.declarative import declarative_base
-# sessionmaker is used to create a session to the database.
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-# "postgresql://user:password@host:port/database"
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:karim@localhost:5432/Backend"
+URL_DATABASE = 'postgresql://postgres:karim@localhost:5432/StudyPal'
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(URL_DATABASE)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

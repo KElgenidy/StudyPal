@@ -6,32 +6,82 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMsg, setEmailErrorMsg] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  
+
+  const validateInputs = () => {
+    let isValid = true;
+
+    if (email === "") {
+      setEmailError(true);
+      setEmailErrorMsg("Email is required");
+      isValid = false;
+    } else if (!email.includes("@")) {
+      setEmailError(true);
+      setEmailErrorMsg("Email is invalid");
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMsg("");
+    }
+
+    if (password === "") {
+      setPasswordError(true);
+      setPasswordErrorMsg("Password is required");
+      isValid = false;
+    }
+    //  else if (password.length < 8) {
+    //   setPasswordError(true);
+    //   setPasswordErrorMsg("Password must be at least 8 characters");
+    //   isValid = false;
+    // }
+    else {
+      setPasswordError(false);
+      setPasswordErrorMsg("");
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!validateInputs()) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await api.post("/signin/", {
-        Email: email,
-        Password: password,
+        email: email,
+        password: password,
       });
 
       console.log(response.data);
       localStorage.setItem("UserId", response.data.user_id);
-      localStorage.setItem("Name", response.data.user_name);
+      localStorage.setItem("Name", response.data.firstname);
+      
 
       navigate("/home/dashboard");
     } catch (error) {
-      alert("Sign in failed:", error);
+      setError(error.response.data.detail);
+      
     } finally {
       setLoading(false);
+      setEmail("");
+      setPassword("");
     }
   };
-
   return (
     <Box sx={{
       display: "flex",
@@ -89,7 +139,7 @@ export default function SignIn() {
             boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
             border: "1px solid #071013",
             width: "500px",
-            height: "500px",
+            height: "600px",
 
             gap: "20px",
           }}
@@ -118,9 +168,28 @@ export default function SignIn() {
             Please sign in to continue.
           </Typography>
 
+          {
+            error && (
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "red",
+                  fontWeight: "500",
+                  textAlign: "center",
+                  fontSize: "1rem",
+                }}
+              >
+                {error}
+              </Typography>
+            )
+          }
+
           <TextField
             label="Email"
             type="email"
+            value={email}
+            error={emailError}
+            helperText={emailErrorMsg}
             onChange={(e) => setEmail(e.target.value)}
             sx={{
               width: "100%",
@@ -130,6 +199,9 @@ export default function SignIn() {
           <TextField
             label="Password"
             type="password"
+            value={password}
+            error={passwordError}
+            helperText={passwordErrorMsg}
             onChange={(e) => setPassword(e.target.value)}
             sx={{
               width: "100%",
@@ -140,7 +212,7 @@ export default function SignIn() {
           <LoadingButton
             loading={loading}
             variant="contained"
-            type="submit"
+            onClick={handleSubmit}
             sx={{
               width: "100%",
               marginBottom: "15px",

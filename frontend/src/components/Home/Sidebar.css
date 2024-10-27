@@ -1,0 +1,32 @@
+.sidebar {
+    width: 200px;
+    height: 100vh; /* Full height of the viewport */
+    background-color: #f4f4f4;
+    padding: 20px;
+    position: fixed; /* Fix it to the side */
+    top: 0;
+    left: 0;
+    margin-top: 60px; /* Move the sidebar content down */
+  }
+  
+  .sidebar ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .sidebar ul li {
+    margin-bottom: 20px;
+  }
+  
+  .sidebar ul li a {
+    font-weight: bold; /* Make the links bold */
+    text-decoration: none; /* Remove underline */
+    color: #6778ea;
+    font-size: 18px;
+  }
+  
+  .sidebar ul li a:hover {
+    color: #51f1e4;
+    text-decoration: none; /* Ensure no underline on hover */
+  }
+  

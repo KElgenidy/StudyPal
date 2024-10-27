@@ -10,7 +10,7 @@ export default function Courses() {
 
   const getCourses = async () => {
     try {
-      const response = await api.get("/courses");
+      const response = await api.get("/courses/");
       setCourses(response.data);
     } catch (error) {
       console.log(error);
@@ -36,6 +36,7 @@ export default function Courses() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          mt: "20px",
         }}
       >
         <Typography
@@ -49,7 +50,11 @@ export default function Courses() {
           Available Courses
         </Typography>
 
-        <Button variant="contained" color="primary" onClick={() => navigate("/home/enroll")}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/home/enrollments")}
+        >
           Enroll
         </Button>
       </Box>
@@ -76,7 +81,7 @@ export default function Courses() {
       >
         {courses.map((course) => (
           <Box
-            key={course.CRN}
+            key={course.id}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -98,19 +103,19 @@ export default function Courses() {
                 marginBottom: "20px",
               }}
             >
-              {course.Name}
+              {course.course_name}
             </Typography>
             <Typography
               variant="body1"
               sx={{
                 color: "#071013",
-                fontWeight: "bold",
-                fontSize: "1.3rem",
+                fontWeight: "400",
+                fontSize: "1.15rem",
                 marginBottom: "20px",
                 textAlign: "center",
               }}
             >
-              {course.Description}
+              {course.description}
             </Typography>
           </Box>
         ))}

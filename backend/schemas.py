@@ -1,69 +1,76 @@
-# schemas.py
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 
-# Define the Pydantic models for User
-class UserBase(BaseModel):
-    ID: int
-    Name: str
-    Email: EmailStr
-    Type: str  # 'student' or 'instructor'
-    Major: Optional[str] = None
-
-class UserCreate(UserBase):
-    Password: str
-
-class UserSignIn(BaseModel):
-    Email: EmailStr
-    Password: str
-
-class UserResponse(UserBase):
-
-    class Config:
-        from_attributes = True
-
-# Define the Pydantic models for Course
-class CourseBase(BaseModel):
-    CRN: int
-    Name: str
-    Description: str
-
-class CourseResponse(CourseBase):
-    class Config:
-        from_attributes = True
-
-# Define the Pydantic models for Enrollment
-# class EnrollmentBase(BaseModel):
-#     ID: int
-#     CRN: int
-#     UserId: int
-
-# class EnrollmentResponse(EnrollmentBase):
-#     class Config:
-#         orm_mode = True
-
-class EnrollmentBase(BaseModel):
-    UserId: int
-    CRN: List[int]  # Change to accept a list of CRNs
-
-class EnrollBase(BaseModel):
-    UserId: int
-    CRN: int  # Change to accept a list of CRNs
-
-    class Config:
-        from_attributes = True
-
-
-class EnrollmentResponse(BaseModel):
-    UserId: int
-    CRN: List[int]
-
-    class Config:
-        from_attributes = True
-
-
+# Query
 class Query(BaseModel):
     query: str
 
 class QueryResponse(BaseModel):
     response: str
+
+# Quizzes
+class ChoiceBase(BaseModel):
+    choice_text: str
+    is_correct: bool
+
+
+class QuestionBase(BaseModel):
+    question_text: str
+    choices: List[ChoiceBase]
+
+
+# Users
+class UsersBase(BaseModel):
+    id: int
+    email: str
+    firstname: str
+    lastname: str
+    password: str
+    type: str
+    major: str
+
+class UserSignIn(BaseModel):
+    email: str
+    password: str
+
+class SignInResponse(UsersBase):
+    id: int
+    firstname: str
+    lastname: str
+
+    class Config:
+        from_attributes = True
+
+# Courses
+class CourseBase(BaseModel):
+    id: int
+    course_name: str
+    description: str
+
+class CourseContentBase(BaseModel):
+    data: str
+    course_id: int
+    user_id: int
+
+
+class CourseRegister(BaseModel):
+    course_name: str
+    description: str
+
+# Emrollments
+class EnrollmentBase(BaseModel):
+    course_id: int
+    user_id: int
+
+
+# Chat History
+class ChatHistoryBase(BaseModel):
+    chat_message: str
+    course_id: int
+    user_id: int
+
+# Summary Notes
+class SummaryNotesBase(BaseModel):
+    note: str
+    course_id: int
+    user_id: int

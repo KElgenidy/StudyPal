@@ -1,182 +1,235 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request, Response
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, File, UploadFile
 from sqlalchemy.orm import Session
 import models, schemas
-from database import engine, get_db
+from database import get_db, engine
 from fastapi.middleware.cors import CORSMiddleware
+import shutil
+import os
+from studypal import StudyPal
+from fastapi import Query
+from pydantic import BaseModel
+from typing import List
 from studypal import StudyPal
 
 studypal = StudyPal()
+agent = studypal.get_react_agent()
 
-# Create all tables
 models.Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI()
 
 origins = ["*"]
 
-# Configure CORS (adjust origins as needed)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to specific domains in production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.post("/signup/", response_model=schemas.UserResponse)
-def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Check if the email is already in use
-    existing_user = db.query(models.Users).filter(models.Users.Email == user.Email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+# CHAT
+@app.post("/chat", response_model=schemas.QueryResponse)
+def chat(request: schemas.Query):
+    inputs = {"messages": [("user", request.query)]}
+    response =  agent.invoke(inputs)
+    return {
+        "response": response["messages"][-1].content,
+    }
     
-    if user.Password == "":
-        raise HTTPException(status_code=400, detail="Password cannot be empty")
-    
-    # Create a new user
-    new_user = models.Users(
-        ID=user.ID,
-        Name=user.Name,
-        Email=user.Email,
-        Password=user.Password,
-        Type=user.Type,
-        Major=user.Major,
-    )
 
+# Users
+@app.post("/signup/")
+async def create_user(user: schemas.UsersBase, db: Session = Depends(get_db)):
+   
+    existing_user = db.query(models.Users).filter(models.Users.email == user.email).first()
+
+    
+
+    if existing_user is not None:
+        print("User already exists")
+        return HTTPException(status_code=400, detail="User already exists")
+    if user.password == " ":
+        print("Password cannot be empty")
+        return HTTPException(status_code=400, detail="Password cannot be empty")
+    
+    new_user = models.Users(
+        email=user.email,
+        firstname=user.firstname,
+        lastname=user.lastname,
+        password=user.password,
+        type=user.type,
+        major=user.major
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
-    return new_user
-
-@app.post("/signin/")
-def signin(form_data: schemas.UserSignIn, response: Response, db: Session = Depends(get_db)):
-    # Authenticate the user
-    user = db.query(models.Users).filter(models.Users.Email == form_data.Email).first()
-    if not user or user.Password != form_data.Password:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Here you can generate a JWT token for authentication
-    # For simplicity, we'll just return a success message
     return {
-        "message": "Successfully signed in",
-        "user_id": user.ID,
-        "user_name": user.Name
+        "message": "User created successfully",
     }
 
-@app.get("/users/{user_id}", response_model=schemas.UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.Users).filter(models.Users.ID == user_id).first()
+@app.post("/signin/")
+async def signin(user: schemas.UserSignIn, db: Session = Depends(get_db)):
+    existing_user = db.query(models.Users).filter(models.Users.email == user.email).first()
+
+    print(existing_user)
+
+    if existing_user is None or existing_user.password != user.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    
+    return {
+        "message": "User signed in successfully",
+        "user_id": existing_user.id,
+        "firstname": existing_user.firstname,
+        "lastname": existing_user.lastname,
+    }
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.Users).filter(models.Users.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-
-# courses routes
-# get all courses
-@app.get("/courses/", response_model=list[schemas.CourseResponse])
-def get_courses(db: Session = Depends(get_db)):
-    courses = db.query(models.Courses).all()
+# Courses
+@app.get("/courses/", response_model=list[schemas.CourseBase])
+async def get_courses(db: Session = Depends(get_db)):
+    courses = db.query(models.Course).all()
     if not courses:
         raise HTTPException(status_code=404, detail="No courses found")
     return courses
-#get course by id
-@app.get("/courses/{course_id}", response_model=schemas.CourseResponse)
-def get_course(course_id: int, db: Session = Depends(get_db)):
-    course = db.query(models.Courses).filter(models.Courses.CRN == course_id).first()
+
+@app.get("/courses/{course_id}")
+async def get_course(course_id: int, db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     return course
+app.get("/courses/{course_name}")
+async def get_course(course_name: str, db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.course_name == course_name).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return {"courseId": course.id, "courseName": course.course_name}  # Add any other fields you need
+#@app.get("/courses/{course_name}")
+#async def get_course(course_name: str, db: Session = Depends(get_db)):
+#    course = db.query(models.Course).filter(models.Course.course_name == course_name).first()
+#    if not course:
+#        raise HTTPException(status_code=404, detail="Course not found")
+#    return course
 
-#create course
-@app.post("/courses/create", response_model=schemas.CourseResponse)
+@app.post("/courses/create/")
 def create_course(course: schemas.CourseBase, db: Session = Depends(get_db)):
-    # Check if the course already exists
-    existing_course = db.query(models.Courses).filter(models.Courses.CRN == course.CRN).first()
-    if existing_course:
+    exsisting_course = db.query(models.Course).filter(models.Course.id == course.id).first()
+    if exsisting_course:
         raise HTTPException(status_code=400, detail="Course already exists")
-    # Create a new course
-    new_course = models.Courses(
-        CRN=course.CRN,
-        Name=course.Name,
-        Description=course.Description
+    
+    new_course = models.Course(
+        id=course.id,
+        course_name = course.course_name,
+        description=course.description
     )
     db.add(new_course)
     db.commit()
     db.refresh(new_course)
-    return new_course
+    return {
+        "message": "Course created successfully",
+    }
+# @app.put("/courses/update/{course_id}")
+# async def update_course(course_id: int, course: schemas.CourseBase, db: Session = Depends(get_db)):
+#     existing_course = db.query(models.Course).filter(models.Course.id == course_id).first()
+#     if not existing_course:
+#         raise HTTPException(status_code=404, detail="Course not found")
+#     existing_course.course_name = course.course_name
+#     existing_course.description = course.description
+#     db.commit()
+#     db.refresh(existing_course)
+#     return existing_course
 
-# enrollment routes
-# get all enrolled courses
-@app.get("/enrollments/{user_id}", response_model=list[schemas.CourseResponse])
-def get_enrollments(user_id: int, db: Session = Depends(get_db)):
-    enrollments = db.query(models.Enrollment).filter(models.Enrollment.UserId == user_id).all()
-    if not enrollments:
-        raise HTTPException(status_code=404, detail="You have not enrolled in any courses")
-    enrolledcourses = []
-    for enrollment in enrollments:
-        enrolledcourses.append(db.query(models.Courses).filter(models.Courses.CRN == enrollment.CRN).first())
+#  ENROLLMENT
+@app.post("/enrollment/enroll/")
+async def create_enrollment(enrollment: schemas.EnrollmentBase, db: Session = Depends(get_db)):
     
-    return enrolledcourses
-
-# enroll in a course
-@app.post("/enrollments/enroll", response_model=schemas.EnrollBase)
-def enroll_course(enrollment: schemas.EnrollBase, db: Session = Depends(get_db)):
-    # Check if the course exists
-    course = db.query(models.Courses).filter(models.Courses.CRN == enrollment.CRN).first()
+    course = db.query(models.Course).filter(models.Course.id == enrollment.course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    # Check if the user is already enrolled in the course
-    existing_enrollment = db.query(models.Enrollment).filter(models.Enrollment.UserId == enrollment.UserId, models.Enrollment.CRN == enrollment.CRN).first()
+    
+    existing_enrollment = db.query(models.Enrollment).filter(models.Enrollment.course_id == enrollment.course_id, models.Enrollment.user_id == enrollment.user_id).first()
     if existing_enrollment:
-        raise HTTPException(status_code=400, detail="You are already enrolled in this course")
-    # Create a new enrollment
+        raise HTTPException(status_code=400, detail="User already enrolled in this course")
+
     new_enrollment = models.Enrollment(
-        UserId=enrollment.UserId,
-        CRN=enrollment.CRN
+        course_id=enrollment.course_id, user_id=enrollment.user_id
     )
     db.add(new_enrollment)
     db.commit()
     db.refresh(new_enrollment)
-    return new_enrollment
-
-
-@app.post("/enrollments/create", response_model=schemas.EnrollmentResponse)
-def enroll_course(enrollment: schemas.EnrollmentBase, db: Session = Depends(get_db)):
-    details = []
-
-    # Check if the user is already enrolled in any of the courses
-    for crn in enrollment.CRN:
-        existing_enrollment = db.query(models.Enrollment).filter(models.Enrollment.UserId == enrollment.UserId, models.Enrollment.CRN == crn).first()
-        if existing_enrollment:
-            details.append(str(crn))
-        
-    if details:
-        raise HTTPException(status_code=400, detail=f"You are already enrolled in the following courses: {", ".join(details)}.")
-            
-
-    # Create new enrollments for each course
-    for crn in enrollment.CRN:
-        new_enrollment = models.Enrollment(
-            UserId=enrollment.UserId,
-            CRN=crn
-        )
-        db.add(new_enrollment)
+    # return enrollment
     db.commit()
     return {
-        "UserId": enrollment.UserId,
-        "CRN": enrollment.CRN
+        "message": "Enrollment operation successfully",
     }
 
-
-
-
-@app.post("/chat", response_model=schemas.QueryResponse)
-def chat(request: schemas.Query):
-    response =  studypal.query(query=request.query)
-    return {
-        "response": response
-    }
+@app.get("/enrollment/{user_id}")
+def read_enrollment(user_id: int, db: Session = Depends(get_db)):
+    enrollments = db.query(models.Enrollment).filter(models.Enrollment.user_id == user_id).all()
+    if not enrollments:
+        raise HTTPException(status_code=404, detail="No enrollments found")
     
+    enrolled_courses = []
+    for enrollment in enrollments:
+        enrolled_courses.append(db.query(models.Course).filter(models.Course.id == enrollment.course_id).first())
+
+    return enrolled_courses
+
+#@app.put("/enrollment/{enrollment_id}", response_model=models.Enrollment)
+#def update_enrollment(enrollment_id: int, updated_enrollment: models.Enrollment, db: Session = Depends(get_db)):
+#    enrollment = db.query(models.Enrollment).filter(models.Enrollment.id == enrollment_id).first()
+#    if enrollment is None:
+#        raise HTTPException(status_code=404, detail="Enrollment not found")
+#    for key, value in updated_enrollment.__dict__.items():
+#        if key != "id":
+#            setattr(enrollment, key, value)
+#    db.commit()
+#    return enrollment
+
+@app.delete("/enrollment/{enrollment_id}", response_model=dict)
+def delete_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
+    enrollment = db.query(models.Enrollment).filter(models.Enrollment.id == enrollment_id).first()
+    if enrollment is None:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    db.delete(enrollment)
+    db.commit()
+    return {"detail": "Enrollment deleted"}
+
+
+
+
+@app.post("/upload_pdf/")
+async def upload_pdf(file: UploadFile = File(...)):
+    # Define the directory where files will be stored
+    temp_dir = "./temp"
     
+    # Create the directory if it doesn't exist
+    os.makedirs(temp_dir, exist_ok=True)
+
+    # Define the file path
+    file_location = f"{temp_dir}/{file.filename}"
+
+    # Save the uploaded file
+    with open(file_location, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    return {"info": "file uploaded successfully", "file_path": file_location}
+
+@app.get("/api/flashcards")
+async def get_flashcards(query: str = Query(...)):
+    # Create an instance of StudyPal
+    studypal = StudyPal()
+
+    # Get the flashcards
+    flashcards = studypal.flashcard_tool(query)
+
+    return flashcards

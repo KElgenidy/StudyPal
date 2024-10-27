@@ -33,7 +33,7 @@ useEffect(() => {
     }}>
       {courses.map((course) => (
         <Card
-          key={course.CRN}
+          key={course.id}
           sx={{
             minHeight: 200,
             display: "flex",
@@ -44,7 +44,7 @@ useEffect(() => {
         >
           <CardContent>
             <Typography variant="h5" component="div">
-              {course.Name}
+              {course.course_name}
             </Typography>
           </CardContent>
         </Card>

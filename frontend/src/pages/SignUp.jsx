@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+
 import {
   Box,
   TextField,
@@ -10,33 +11,127 @@ import {
   Select,
   MenuItem,
   Button,
+  Alert
 } from "@mui/material";
 import api from "../api";
 import { LoadingButton } from "@mui/lab";
 
 export default function SignUp() {
   localStorage.clear();
+
   const [firstName, setFirstName] = useState("");
+  const [firstNameError, setFirstNameError] = useState(false);
+  const [firstNameErrorMsg, setFirstNameErrorMsg] = useState("");
+
   const [lastName, setLastName] = useState("");
+  const [lastNameError, setLastNameError] = useState(false);
+  const [lastNameErrorMsg, setLastNameErrorMsg] = useState("");
+
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMsg, setEmailErrorMsg] = useState("");
+
   const [id, setId] = useState("");
+  const [idError, setIdError] = useState(false);
+  const [idErrorMsg, setIdErrorMsg] = useState("");
+
   const [type, setType] = useState("Student");
+
   const [major, setMajor] = useState("");
+  const [majorError, setMajorError] = useState(false);
+  const [majorErrorMsg, setMajorErrorMsg] = useState("");
+
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const validateInputs = () => {
+    let isValid = true;
+    if (firstName === "") {
+      setFirstNameError(true);
+      setFirstNameErrorMsg("First name is required");
+      isValid = false;
+    } else {
+      setFirstNameError(false);
+      setFirstNameErrorMsg("");
+    }
+    if (lastName === "") {
+      setLastNameError(true);
+      setLastNameErrorMsg("Last name is required");
+      isValid = false;
+    } else {
+      setLastNameError(false);
+      setLastNameErrorMsg("");
+    }
+
+    if (email === "") {
+      setEmailError(true);
+      setEmailErrorMsg("Email is required");
+      isValid = false;
+    } else if (!email.includes("@")) {
+      setEmailError(true);
+      setEmailErrorMsg("Email is invalid");
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMsg("");
+    }
+
+    if (id === "") {
+      setIdError(true);
+      setIdErrorMsg("ID is required");
+      isValid = false;
+    } else {
+      setIdError(false);
+      setIdErrorMsg("");
+    }
+
+    if (type === "Student" && major === "") {
+      setMajorError(true);
+      setMajorErrorMsg("Major is required");
+      isValid = false;
+    } else {
+      setMajorError(false);
+      setMajorErrorMsg("");
+    }
+
+    if (password === "") {
+      setPasswordError(true);
+      setPasswordErrorMsg("Password is required");
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError(true);
+      setPasswordErrorMsg("Password must be at least 8 characters");
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMsg("");
+    }
+
+    return isValid;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!validateInputs()) {
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.post("/signup/", {
-        ID: Number(id),
-        Name: `${firstName} ${lastName}`,
-        Email: email,
-        Type: type,
-        Major: major,
-        Password: password,
+        id: Number(id),
+        firstname: firstName,
+        lastname: lastName,
+        email: email,
+        type: type,
+        major: major,
+        password: password,
       });
       navigate("/signin");
     } catch (error) {
@@ -107,7 +202,7 @@ export default function SignUp() {
             boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
             border: "1px solid #071013",
             width: "500px",
-            height: "710px",
+            height: "820px",
             gap: "20px",
           }}
         >
@@ -146,6 +241,9 @@ export default function SignUp() {
           >
             <TextField
               label="First Name"
+              value={firstName}
+              error={firstNameError}
+              helperText={firstNameErrorMsg}
               onChange={(e) => setFirstName(e.target.value)}
               sx={{
                 width: "100%",
@@ -154,6 +252,9 @@ export default function SignUp() {
 
             <TextField
               label="Last Name"
+              value={lastName}
+              error={lastNameError}
+              helperText={lastNameErrorMsg}
               onChange={(e) => setLastName(e.target.value)}
               sx={{
                 width: "100%",
@@ -164,6 +265,9 @@ export default function SignUp() {
           <TextField
             label="Email"
             type="email"
+            value={email}
+            error={emailError}
+            helperText={emailErrorMsg}
             onChange={(e) => setEmail(e.target.value)}
             sx={{
               width: "100%",
@@ -173,6 +277,9 @@ export default function SignUp() {
           <TextField
             label="AUC ID"
             type="text"
+            value={id}
+            error={idError}
+            helperText={idErrorMsg}
             onChange={(e) => setId(e.target.value)}
             sx={{
               width: "100%",
@@ -197,6 +304,9 @@ export default function SignUp() {
             <TextField
               label="Major"
               type="text"
+              value={major}
+              error={majorError}
+              helperText={majorErrorMsg}
               onChange={(e) => setMajor(e.target.value)}
               sx={{
                 width: "100%",
@@ -207,6 +317,9 @@ export default function SignUp() {
           <TextField
             label="Password"
             type="password"
+            value={password}
+            error={passwordError}
+            helperText={passwordErrorMsg}
             onChange={(e) => setPassword(e.target.value)}
             sx={{
               width: "100%",
